@@ -37,12 +37,12 @@ class Sensor {
 		void setLidar(int *lidar);
 		void setRadar(int *radar);
 		const char *getType() const;
-		const float getCost() const;
+		const float getCost(int *gps_cnt, int *camera_cnt, int *lidar_cnt, int *radar_cnt) const;
 		const int getGps() const;
-		const int getCam() const;
+		const int getCamera() const;
 		const int getLidar() const;
 		const int getRadar() const;
-		Sensor operator==(const Sensor &agency);
+		bool operator==(const Sensor & a1, const Sensor & a2);
 	private:
 		char m_type[MAX];
 		float m_extracost;
@@ -55,6 +55,7 @@ class Sensor {
 };
 
 Sensor::Sensor(const Sensor &agency){
+	//use the set method here
 	m_type = agency.m_type;
 	m_extracost = agency.m_extracost;
 	gps_cnt = agency.gps_cnt;
@@ -74,7 +75,7 @@ Sensor::Sensor(){
 }
 
 Sensor::Sensor(char *type, float *extracost, int *gps, int *camera, int *lidar, int *radar){
-	m_type = *type;
+	setType(type);
 	m_extracost = *extracost;
 	setGps(gps);
 	setCam(camera);
@@ -130,10 +131,10 @@ const char * Sensor::getType() const{
 }
 
 const float Sensor::getCost(int *gps_cnt, int *camera_cnt, int *lidar_cnt, int *radar_cnt) const{
-	float gpsCost = gps_cnt*5;
-	float camCost = camera_cnt*10;
-	float lidCost = lidar_cnt*15;
-	float radCost = radar_cnt*20;
+	float gpsCost = *(gps_cnt)*GPS;
+	float camCost = *(camera_cnt)*CAMERA;
+	float lidCost = (*lidar_cnt)*LIDAR;
+	float radCost = (*radar_cnt)*RADAR;
 	
 	float finalCost = gpsCost + camCost + lidCost + radCost;
 	return finalCost;
@@ -156,12 +157,9 @@ const int Sensor::getRadar() const{
 	return radar_cnt;
 }
 
-Sensor::operator==(const Sensor& agency){
-	if(m_type == agency.m_type){
-		return 0;
-	}else{
-		return 1;
-	}
+bool operator==(const Sensor & a1, const Sensor & a2){
+	
+	return a1.getGps()==a2.getGps() && a1.getLidar()==a2.getLidar() && a1.getCamera()==a2.getCamera() && a1.getRadar()==a2.getRadar();
 }
 
 class Car {
@@ -177,7 +175,7 @@ class Car {
 	
 	public:
 		Car();
-		Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice; bool *available);
+		Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice, bool *available);
 		Car(const Car& cars);
 		const char *getMake() const;
 		const char *getModel() const;
@@ -189,14 +187,14 @@ class Car {
 		void setMake(const char *make);
 		void setModel(const char *model);
 		void setOwner(char *owner);
-		void setYear(int *year);
+		void setYear(const int *year);
 		void setBasePrice(float *basePrice);
 		void setFinalPrice(float *finalPrice);
 		void setAvailable(bool available);
 		float estimateCost(const int &days);
 		void print() const;
 		void updatePrice(float basePrice, Sensor sensor);
-		const Car operator+(const Car &a, const Car &b)
+		const Car operator+(const Car &a, const Car &b);
 		const Car operator+(const Car &lessee, const Car &owner) const;
 		
 };
@@ -211,7 +209,7 @@ Car::Car(){
 	setAvailable(AVAILABLE);
 }
 
-Car::Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice; bool *available){
+Car::Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice, bool *available){
 	setMake(make);
 	setModel(model);
 	setOwner(owner);
