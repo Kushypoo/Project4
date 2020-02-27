@@ -1,22 +1,531 @@
-#define MAX 256	
-#define DFT_YEAR 0
-#define DFT_PRICE 0.0
-#define DFT_AVAILABLE 0
-
 #include <iostream>
 #include <fstream>
 
 #include "my_string.h"
-#include "Sensor.h"
-#include "Car.h"
-#include "Agency.h"
-#include "menu.h"
 
+#define CARS 5
+#define LIDAR 15.0
+#define GPS 5.0
+#define CAMERA 10.0
+#define RADAR 20.0
+#define NONE 0.0
+#define MAX 256
+#define SENSOR 3
+#define ZERO 0
+#define YEAR 2020
+#define AVAILABLE 0
+const char * DFT_SENSOR = "none";
+const char* dft_make = "XXXX";
+const char *dft_model = "XXXX";
+const float dft_price = 0.0f;
+const bool dft_avail = false;
+const char *s_gps = "gps";
+const char *s_cam = "camera";
+const char *s_lid = "lidar";
+const char *s_rad = "radar";
+const int year = 2020;
+
+void userMenuPrompt();
+void readIn(class Agency *arr);
+void printAll(class Agency *arr);
+void printFiltered(class Agency *arr);
+void reserveOne(class Agency *arr);
 
 using namespace std;
 
+class Sensor {
+	public:
+		Sensor();
+		Sensor(char *type, float *extracost, int *gps, int *camera, int *lidar, int *radar);
+		Sensor(const Sensor &agency);
+		void printActiveSensor(class Sensor *arr);
+		void setType(const char *type);
+		void setCost(float *cost);
+		void setGps(int *gps);
+		void setCam(int *camera);
+		void setLidar(int *lidar);
+		void setRadar(int *radar);
+		const char getType() const;
+		const float getCost(int *gps_cnt, int *camera_cnt, int *lidar_cnt, int *radar_cnt) const;
+		const int getGps() const;
+		const int getCamera() const;
+		const int getLidar() const;
+		const int getRadar() const;
+		bool operator==(Sensor a1, Sensor a2) const;
+	private:
+		const char m_type[MAX];
+		float m_extracost;
+		static int gps_cnt;
+		static int camera_cnt;
+		static int lidar_cnt;
+		static int radar_cnt;
+		
+	
+};
+
+Sensor::Sensor(const Sensor &agency){
+	//use the set method here
+	const char temp[MAX];
+	temp = myStringCopy(m_type, temp);
+	m_extracost = agency.m_extracost;
+	gps_cnt = agency.gps_cnt;
+	camera_cnt = agency.camera_cnt;
+	lidar_cnt = agency.lidar_cnt;
+	radar_cnt = agency.radar_cnt;
+}
+
+Sensor::Sensor(){
+	m_type = dft_make;
+	m_extracost = dft_price;
+	gps_cnt = year;
+	camera_cnt = year;
+	radar_cnt = year;
+	radar_cnt = year;
+	
+}
+
+Sensor::Sensor(char *type, float *extracost, int *gps, int *camera, int *lidar, int *radar){
+	setType(type);
+	m_extracost = *extracost;
+	setGps(gps);
+	setCam(camera);
+	setLidar(lidar);
+	setRadar(radar);
+	
+}
+void printActiveSensor(class Sensor *arr){
+
+	
+	for(int i = 0; i < 4; i++){
+		if(*gps >=1){
+			cout << "gps " << endl;
+		}
+		if(*camera>=1){
+			cout << "camera " << endl;
+		}
+		if(*lidar>=1){
+			cout << "lidar " << endl;
+		}
+		if(*radar>=1){
+			cout << "radar " << endl;
+		}
+	}
+	
+}
+void Sensor::setType(const char *type){
+	myStringCopy(m_type, type);
+}
+
+void Sensor::setCost(float *cost){
+	m_extracost = *cost;
+}
+
+void Sensor::setGps(int *gps){
+	gps_cnt = *gps;
+}
+
+void Sensor::setCam(int *camera){
+	camera_cnt = *camera;
+}
+
+void Sensor::setLidar(int *lidar){
+	lidar_cnt = *lidar;
+}
+
+void Sensor::setRadar(int *radar){
+	radar_cnt = *radar;
+}
+
+const char Sensor::getType() const{
+	return m_type;
+}
+
+const float Sensor::getCost(int *gps_cnt, int *camera_cnt, int *lidar_cnt, int *radar_cnt) const{
+	float gpsCost = *(gps_cnt)*GPS;
+	float camCost = *(camera_cnt)*CAMERA;
+	float lidCost = (*lidar_cnt)*LIDAR;
+	float radCost = (*radar_cnt)*RADAR;
+	
+	float finalCost = gpsCost + camCost + lidCost + radCost;
+	return finalCost;
+	
+}
+
+const int Sensor::getGps() const{
+	return gps_cnt;
+}
+
+const int Sensor::getCamera() const{
+	return camera_cnt;
+}
+
+const int Sensor::getLidar() const{
+	return lidar_cnt;
+}
+
+const int Sensor::getRadar() const{
+	return radar_cnt;
+}
+
+bool operator==(Sensor a1, Sensor a2){
+	
+	return a1.getGps()==a2.getGps() && a1.getLidar()==a2.getLidar() && a1.getCamera()==a2.getCamera() && a1.getRadar()==a2.getRadar();
+}
+
+class Car {
+	private:
+		char m_make[MAX];
+		char m_model[MAX];
+		int m_year;
+		Sensor m_sensor[SENSOR];
+		float m_baseprice;
+		float m_finalprice;
+		bool m_available;
+		char m_owner[MAX];
+	
+	public:
+		Car();
+		Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice, bool *available);
+		Car(const Car& cars);
+		const char *getMake() const;
+		const char *getModel() const;
+		const char *getOwner() const;
+		const int getYear() const;
+		const float getBasePrice() const;
+		const float getFinalPrice() const;
+		const bool getAvailable() const;
+		void setMake(const char *make);
+		void setModel(const char *model);
+		void setOwner(char *owner);
+		void setYear(const int *year);
+		void setBasePrice(float *basePrice);
+		void setFinalPrice(const float *finalPrice);
+		void setAvailable(bool *available);
+		float estimateCost(const int &days);
+		void print() const;
+		void updatePrice(float basePrice, Sensor sensor);
+		const Car operator+(const Car &a, const Car &b);
+		const Car operator+(const Car &lessee, const Car &owner) const;
+		
+};
+
+Car::Car(){
+	m_year = year;
+	m_make = dft_make;
+	m_owner = dft_make;
+	m_baseprice = dft_price;
+	m_finalprice = dft_price;
+	m_available = dft_avail;
+}
+
+Car::Car(char *make, char *model, char *owner, int *year, float *basePrice, float *finalPrice, bool *available){
+	setMake(make);
+	setModel(model);
+	setOwner(owner);
+	m_year = *year;
+	m_baseprice = *basePrice;
+	m_finalprice = *finalPrice;
+	m_available = *available;
+}
+
+Car::Car(const Car& cars){
+	m_make = cars.m_make;
+	m_model = cars.m_model;
+	m_owner = cars.m_owner;
+	m_year = cars.m_year;
+	m_baseprice = cars.m_baseprice;
+	m_finalprice = cars.m_finalprice;
+	m_available = cars.m_available;
+}
+
+const char Car::getMake() const{
+	return m_make;
+}
+const char Car::getModel() const{
+	return m_model;
+}
+const char Car::getOwner() const{
+	return m_owner;
+}
+const int Car::getYear() const{
+	return m_year;
+}
+const float Car::getBasePrice() const{
+	return m_baseprice;
+}
+const float Car::getFinalPrice() const{
+	return m_finalprice;
+}
+const bool Car::getAvailable() const{
+	return m_available;
+}
+void Car::setMake(const char *make){
+	m_make = *make;
+}
+void Car::setModel(const char *model){
+	m_model = *model;
+}
+void Car::setOwner(const char *owner){
+	m_owner = *owner;
+}
+void Car::setYear(const int *year){
+	m_year = *year;
+}
+void Car::setAvailable(bool *available){
+	m_available = *available;
+}
+void Car::setBasePrice(const float *baseprice){
+	m_baseprice = *baseprice;
+}
+void Car::setFinalPrice(const float *finalprice){
+	m_finalprice = *finalprice;
+}
+float Car::estimateCost(const int &days){
+	float price;
+	price = m_finalprice * days;
+	return price;
+}
+void Car::print() const{
+
+	need to access sensor list, write it between {} and then call the finalprice method to calculate the final price plus the sensors FIX CODE
+	cout << m_make << " " << m_model << "      Base: " << m_baseprice << "   With " <<  << " " << m_baseprice << " " << m_finalprice << " Available: " << boolalpha << m_available << endl;
+	cout << "Test";
+}
+const Car Car::operator+(const Car &a, const Car &b){
+	return Car(a.getSensors() + b.getSensors());
+}
+const Car Car::operator+(const Car &lessee, const Car &owner) const{
+	return Car(lessee.getOwner() + owner.getOwner());
+}
+
+
+class Agency {
+	private:
+		char m_name[MAX];
+		const int m_zipcode;
+		Car m_inventory[CARS];
+	public:
+		Agency();
+		Agency(char *name, int *zip);
+		const char *getName();
+		const int *getZip();
+		void setName(const char *name);
+		void setZip(const int *zip);
+		Car & operator[](unsigned int index);
+		void readAllData(const char *file);
+		void printActiveSensors(class Agency *arr);//prints the total num of sensors of the agency by sensor type
+		void printData(class Agency *arr);//print out name, zip, number of sensors by sensor type
+		void printAllCars(class Agency *arr);//print out the car objects as well as their indexes
+		void printAvailableCars(class Agency *arr);//print out only available cars sorted by index
+};
+Agency::Agency(){
+	setName(DFT_SENSOR);
+	setZip(CARS);
+}
+Agency::Agency(char *name, int *zip){
+	m_name = name;
+	m_zipcode = zip;
+}
+const char Agency::getName(){
+	return m_name;	
+}
+const int Agency::getZip(){
+	return m_zipcode;
+}
+void Agency::setName(const char *name){
+	m_name = *name;
+}
+void Agency::setZip(const int *zip){
+	m_zipcode = *zip;
+}
+const Car & Agency::operator[](unsigned int index){
+	return m_inventory[index];
+}
+void Agency::readAllData(const char *file){
+	
+	int tempZip;	
+	char tempSensors[MAX], tempAgency[MAX];
+	int tempYear[CARS];
+	char tempMake[MAX];
+	char tempModel[MAX];
+	float tempBasePrice;
+	bool available;
+	char lessee[MAX];
+	char t;
+	
+	ifstream inputStream(file);
+	
+	if(!inputStream.is_open()){
+	
+		cerr << "ERROR: COULD NOT OPEN FILE\n";	
+		return;
+	
+	}
+	
+	for(int i = 0; i < 5; ++i){
+		Car *c = &(operator[](i));
+		stream >> t_year >> t_make >> t_model >> t_price >> t;
+		int j = 0;
+		bool exit = false;
+		do{
+			Sensor *s = &(c->operator[](j));
+			stream >> tempSensors;
+			int length;
+			length = myStringLength(t_sensors);
+			if(tempSensors[length-1]=='}'){
+				tempSensors[length-1] = '\0';
+				exit = true;
+			}
+			s->setType(tempSensors);
+			++j;
+		}while(j < 3 && !exit);
+		stream >> available;
+		if(!available){
+			stream >> lessee;
+			c->setOwner(lessee);
+		}else{
+			c->setAvailable(available);
+			c->setBasePrice(tempBasePrice);
+			c->setYear(tempYear);
+			c->setModel(tempModel);
+			c->setMake(tempMake);
+		}
+		
+	}
+	inputStream.close();
+	
+}
+void Agency::printActiveSensors(class Agency *arr){
+	
+	Car *c = arr->m_inventory;
+	Sensor *s = c->m_sensor;
+	int temp;
+
+	cout << "Active Sensors: {gps}: " << s->getGps() << " {camera}: " << s->getCamera() << " {lidar}: " << s->getLidar << " {radar}: " << s->getRadar;
+}
+	
+void Agency::printData(class Agency *arr){
+
+	int i = 0;
+	Car *c = &(operator[](i));
+	Sensor *s = c->m_sensor;
+	for(int i = 0; i < 5; i ++){
+		
+	}
+	
+	cout << m_name << " " << m_zipcode;
+	s->printActiveSensor(s);
+	
+}
+void Agency::printAllCars(class Agency *arr){
+//needs work
+	Car *c = arr->m_inventory;
+	Sensor *s1 = c->m_sensor;
+	for(int i = 0; i < 5; i++){
+		cout << "[" << i << "]";
+		c->print();
+		s1->printActiveSensor(s1);
+		c->getAvailable();
+		++c;
+		++s1;
+	}
+}
+void Agency::printAvailableCars(class Agency *arr){
+//needs work
+	
+	Car *c = arr->m_inventory;
+	Sensor *s = c->m_sensor;
+	cout << m_name << " " << m_zipcode;
+	for(int i = 0; i < 5; i++){
+		if(c->getAvailable() == true){
+		cout << "[" << i << "]";
+		s->printActiveSensor(s);
+		++c;
+		++s;
+		}
+	}
+
+}
 
 int main(){
 	userMenuPrompt();
 	return 0;
 }
+
+void userMenuPrompt(){
+	class Agency arr[1];
+	Agency *arr_pt = NULL; 
+	arr_pt = arr;
+	char userInput;
+	
+	do{
+		cout << "Enter a Menu Option\n=====MENU=====\n1: Upload Car Agency Data\n2: View Car and Sensor Info\n3: Print available cars\n";
+	cout << "4: Reserve a car \n 5: Exit\n"; 
+	cin >> userInput;
+		switch(userInput){
+			case '1':
+				//readIn
+				readIn(arr_pt);
+				break;
+			case '2':
+				//printAll
+				printAll(arr_pt);
+				break;
+			case '3':
+				//printFiltered
+				printFiltered(arr_pt);
+				break;
+			case '4':
+				//reserveOne
+				reserveOne(arr_pt);
+				break;
+			case '5':
+				break;
+		}
+		
+	}while(userInput != '6');
+	return;
+}
+
+void readIn(class Agency *arr){
+
+	char inputFile[MAX];	
+	cout << "Enter the Name of Your Input File (name.extension)\n";
+	cin >> inputFile;
+	
+	arr->readAllData(inputFile);
+}
+
+void printAll(class Agency *arr){
+	//call printAllCars (PUT IN FORMAT OF OUTPUT 2 EXAMPLE!!!)
+	
+	arr->printAllCars(arr);
+}
+
+void printFiltered(class Agency *arr){
+	
+	//call the printAvailable method
+	arr->printAvailableCars(arr);
+}
+
+void reserveOne(class Agency *arr){
+	//prompt for user input for the car index.
+	int userInput;
+	cout << "Enter the car index for your reservation." << endl;
+	cin >> userInput;
+	Car *ptr;
+	Sensor *pnt;
+	ptr = arr->m_inventory;
+	pnt = ptr->m_sensor;
+	if(ptr == 0){
+		cout << "Error: Car not available. Please try again.\n";
+		return;
+	}
+	ptr->setAvailable(false);
+	arr -=userInput;
+	printAll(arr);
+	cout << "Your rental car has been chosen.\n";
+	
+	
+}
+
